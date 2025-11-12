@@ -232,7 +232,6 @@ void loop() {
     command.trim();
 
     if (command.equalsIgnoreCase("status")) {
-      int analogValue = analogRead(analogPin);
       int analogVolts = analogReadMilliVolts(analogPin);
       Serial.printf("Battery Voltage = %.2f V\n", analogVolts / 1000.0);
     }
