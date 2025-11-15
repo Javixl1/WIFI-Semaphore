@@ -2,10 +2,10 @@
  * Trafic Light
  */
 // Asignación de pines
-const int LightGreen =  19;
+const int LightGreen =  17;
 const int LightYellow = 20;
-const int LightRed =    18;
-const int Lightwhite =  17;
+const int LightRed =    19;
+const int Lightwhite =  18;
 // Variable para el estado del semáforo
 int state = 0;
 unsigned long previousMillis = 0;

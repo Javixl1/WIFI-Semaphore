@@ -3,10 +3,10 @@
 #include <Preferences.h>
 
 // Output pins
-const int LightGreen  = 19;
+const int LightGreen  = 17;
 const int LightYellow = 20;
-const int LightRed    = 18;
-const int LightWhite  = 17;
+const int LightRed    = 19;
+const int LightWhite  = 18;
 const int analogPin   = A0;
 
 bool firstSetup = false;
@@ -20,18 +20,37 @@ String pass = "";
 
 // Update LED states based on current selection
 void updateLights() {
-  digitalWrite(LightGreen,  state == 0 ? HIGH : LOW);
-  digitalWrite(LightYellow, state == 1 ? HIGH : LOW);
-  digitalWrite(LightRed,    state == 2 ? HIGH : LOW);
-  digitalWrite(LightWhite,  state == 3 ? HIGH : LOW);
+  digitalWrite(LightGreen,  LOW);
+  digitalWrite(LightYellow, LOW);
+  digitalWrite(LightRed,    LOW);
+  digitalWrite(LightWhite,  LOW);
 
   String color;
   switch (state) {
-    case 0: color = "Green"; break;
-    case 1: color = "Yellow"; break;
-    case 2: color = "Red"; break;
-    case 3: color = "White"; break;
+    case 0:
+      color = "Off";
+      break;
+    case 1:
+      digitalWrite(LightGreen, HIGH);
+      color = "Green";
+      break;
+    case 2:
+      digitalWrite(LightYellow, HIGH);
+      color = "Yellow";
+      break;
+    case 3:
+      digitalWrite(LightRed, HIGH);
+      color = "Red";
+      break;
+    case 4:
+      digitalWrite(LightWhite, HIGH);
+      color = "White";
+      break;
+    default:
+      color = "Unknown";
+      break;
   }
+
   Serial.println("Light: " + color);
 }
 
@@ -57,10 +76,11 @@ void handleRoot() {
     html = "<!DOCTYPE html><html><head><title>Control Panel</title></head><body>";
 
     html += "<h1>Select Light Type</h1><form action=\"/setlight\" method=\"POST\">";
-    html += "<input type=\"radio\" name=\"light\" value=\"0\" " + String(state == 0 ? "checked" : "") + "> Green<br>";
-    html += "<input type=\"radio\" name=\"light\" value=\"1\" " + String(state == 1 ? "checked" : "") + "> Yellow<br>";
-    html += "<input type=\"radio\" name=\"light\" value=\"2\" " + String(state == 2 ? "checked" : "") + "> Red<br>";
-    html += "<input type=\"radio\" name=\"light\" value=\"3\" " + String(state == 3 ? "checked" : "") + "> White<br>";
+    html += "<input type=\"radio\" name=\"light\" value=\"0\" " + String(state == 0 ? "checked" : "") + "> Off<br>";
+    html += "<input type=\"radio\" name=\"light\" value=\"1\" " + String(state == 1 ? "checked" : "") + "> Green<br>";
+    html += "<input type=\"radio\" name=\"light\" value=\"2\" " + String(state == 2 ? "checked" : "") + "> Yellow<br>";
+    html += "<input type=\"radio\" name=\"light\" value=\"3\" " + String(state == 3 ? "checked" : "") + "> Red<br>";
+    html += "<input type=\"radio\" name=\"light\" value=\"4\" " + String(state == 4 ? "checked" : "") + "> White<br>";
     html += "<input type=\"submit\" value=\"Apply\"></form>";
 
     html += "<h1>Reset Wi-Fi</h1><form action=\"/resetwifi\" method=\"POST\">";
@@ -131,7 +151,7 @@ void handleApiLight() {
 
   if (server.hasArg("state")) {
     int newState = server.arg("state").toInt();
-    if (newState >= 0 && newState <= 3) {
+    if (newState >= 0 && newState <= 4) {
       state = newState;
       prefs.putInt("state", state);
       updateLights();
@@ -149,10 +169,12 @@ void handleApiLight() {
 void handleApiStatus() {
   String color;
   switch (state) {
-    case 0: color = "Green"; break;
-    case 1: color = "Yellow"; break;
-    case 2: color = "Red"; break;
-    case 3: color = "White"; break;
+    case 0: color = "Off"; break;
+    case 1: color = "Green"; break;
+    case 2: color = "Yellow"; break;
+    case 3: color = "Red"; break;
+    case 4: color = "White"; break;
+    default: color = "Unknown"; break;
   }
 
   int analogVolts = analogReadMilliVolts(analogPin);
@@ -232,8 +254,44 @@ void loop() {
     command.trim();
 
     if (command.equalsIgnoreCase("status")) {
-      int analogVolts = analogReadMilliVolts(analogPin);
-      Serial.printf("Battery Voltage = %.2f V\n", analogVolts / 1000.0);
+      int analogValue = analogRead(analogPin);
+      float voltage = (analogValue / 4095.0) * 3.3;
+      Serial.printf("Battery Voltage = %.2f V\n", voltage);
+    }
+
+    if (command.equalsIgnoreCase("off")) {
+      state = 0;
+      prefs.putInt("state", state);
+      updateLights();
+      Serial.println("All lights turned off.");
+    }
+
+    if (command.equalsIgnoreCase("green")) {
+      state = 1;
+      prefs.putInt("state", state);
+      updateLights();
+      Serial.println("Green light activated.");
+    }
+
+    if (command.equalsIgnoreCase("yellow")) {
+      state = 2;
+      prefs.putInt("state", state);
+      updateLights();
+      Serial.println("Yellow light activated.");
+    }
+
+    if (command.equalsIgnoreCase("red")) {
+      state = 3;
+      prefs.putInt("state", state);
+      updateLights();
+      Serial.println("Red light activated.");
+    }
+
+    if (command.equalsIgnoreCase("white")) {
+      state = 4;
+      prefs.putInt("state", state);
+      updateLights();
+      Serial.println("White light activated.");
     }
   }
 }
